@@ -20,6 +20,7 @@ import { ConversationSummary } from "../../../reducers/conversations_summary"
 import { ConversationEntry } from "./conversation_entry"
 import { useAppSelector } from "../../../hooks"
 import { CreateConversationModal } from "../../CreateConversationModal"
+import { useDiscussionPollDisplayOptions } from "./useDiscussionPollDisplayOptions"
 
 const conversationStatusOptions = {
   open: { label: "Open", color: "blue" },
@@ -43,26 +44,18 @@ export default () => {
   const [createConversationModalIsOpen, setCreateConversationModalIsOpen] = useState(false)
 
   const {
-    showAuthors,
-    setShowAuthors,
-    showCategory,
-    setShowCategory,
-    showCreationDate,
-    setShowCreationDate,
-    showType,
-    setShowType,
     sortBy,
     setSortBy,
     resetDisplayOptions,
     saveDisplayOptions,
-  } = useFipDisplayOptions()
+  } = useDiscussionPollDisplayOptions()
 
   const [searchParams, setSearchParams] = useSearchParams()
 
   const searchParam = searchParams.get("search") || ""
 
   const { data } = useSWR(
-    `conversations_summary_sentiment_checks`,
+    `conversations_summary_discussion_polls`,
     async () => {
       const response = await fetch(`/api/v3/conversations_summary`)
       // process the fip_version part if it exists
@@ -99,7 +92,7 @@ export default () => {
       // the conversation's displayed title must include the search string, if it is given
       if (
         searchParam &&
-        !conversation.displayed_title.toLowerCase().includes(searchParam.toLowerCase())
+        !(conversation.displayed_title || "").toLowerCase().includes(searchParam.toLowerCase())
       ) {
         return false
       }
@@ -139,7 +132,7 @@ export default () => {
           gap: [3],
         }}
       >
-        <Text sx={{ fontWeight: 600, fontSize: [2] }}>Sentiment Checks</Text>
+        <Text sx={{ fontWeight: 600, fontSize: [2] }}>Discussion Polls</Text>
         <Flex sx={{ gap: [2], width: "100%" }}>
           <Box flexGrow="1" maxWidth="400px">
             <TextField.Root
@@ -235,21 +228,6 @@ export default () => {
                   </Select.Content>
                 </Select.Root>
               </DropdownMenu.Label>
-              <DropdownMenu.Separator />
-              <DropdownMenu.Label>Show / Hide</DropdownMenu.Label>
-              <ClickableChecklistItem checked={showType} setChecked={setShowType}>
-                Type
-              </ClickableChecklistItem>
-              <ClickableChecklistItem checked={showCategory} setChecked={setShowCategory}>
-                Category
-              </ClickableChecklistItem>
-              <ClickableChecklistItem checked={showCreationDate} setChecked={setShowCreationDate}>
-                Creation Date
-              </ClickableChecklistItem>
-              <ClickableChecklistItem checked={showAuthors} setChecked={setShowAuthors}>
-                Authors
-              </ClickableChecklistItem>
-              <DropdownMenu.Separator />
               <DropdownMenu.Label
                 onClick={(e) => {
                   e.preventDefault()
@@ -271,7 +249,7 @@ export default () => {
             <ConversationEntry
               key={conversation.conversation_id}
               conversation={conversation}
-              showCreationDate={showCreationDate}
+              showCreationDate={true}
             />
           ))}
         </Flex>
